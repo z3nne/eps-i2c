@@ -1,0 +1,72 @@
+#include <Wire.h>
+const int mainAddress = 0x1F; // I2C address of the EPS
+
+void setup() {
+  Wire.begin(); // Initialize I2C bus
+  Serial.begin(9600); // Start serial communication at 9600 bps
+  delay(500); // Initial delay for system stabilization
+}
+
+void loop() {
+  sendComplexCommand(); // Send complex command with specified bit settings
+  delay(1000); // Delay between commands (adjust based on your application needs)
+}
+
+void sendComplexCommand() {
+  Wire.beginTransmission(mainAddress); // Start I2C transmission to the given device address
+  Wire.write(0xC0); // Header byte as specified
+
+  // Set the desired bits for each byte as per the requirement
+  Wire.write(0x03); // Byte 1: Sets bits 0 and 1 to 1 (3V3EN and 5VEN)
+  Wire.write(0x00); // Byte 2: Not specified, default to 0
+  Wire.write(0x07); // Byte 3: Sets bits 0, 1, and 2 to 1
+  Wire.write(0x07); // Byte 4: Sets bits 0, 1, and 2 to 1
+  Wire.write(0x07); // Byte 5: Sets bits 0, 1, and 2 to 1
+  Wire.write(0x07); // Byte 6: Sets bits 0, 1, and 2 to 1
+  Wire.write(0x00); // Byte 7: Not specified, default to 0
+  Wire.write(0x00); // Byte 8: Not specified, default to 0
+  Wire.write(0xFF); // Stop byte as specified
+
+  Wire.endTransmission(); // End transmission
+
+  Serial.println("Complex command sent: Enabled various PDU channels and DCDC outputs"); // Confirm operation in the serial monitor
+}
+#include <Wire.h>
+const int mainAddress = 0x1F; // I2C address of the EPS
+
+void setup() {
+  Wire.begin(); // Initialize I2C bus
+  Serial.begin(9600); // Start serial communication at 9600 bps
+  delay(500); // Initial delay for system stabilization
+}
+
+void loop() {
+  int byteIndex = 37; // Specify which byte's bits to read and print
+  readAndPrintByteBits(byteIndex);
+  delay(1000); // Delay between reads (adjust this as needed)
+}
+
+void readAndPrintByteBits(int byteIndex) {
+  Wire.requestFrom(mainAddress, byteIndex + 1); // Request bytes up to the specified byte index
+  byte targetByte = 0;
+
+  // Move through the bytes until we reach the desired one
+  for (int i = 0; i <= byteIndex; i++) {
+    if (Wire.available()) {
+      targetByte = Wire.read(); // Read the next byte
+    }
+  }
+
+  // Assuming we've received the correct byte, print all its bits
+  if (Wire.available() == 0) { // Ensures we've processed all requested data
+    Serial.print("Bits of Byte ");
+    Serial.print(byteIndex);
+    Serial.print(": ");
+    for (int bit = 7; bit >= 0; bit--) {
+      Serial.print((targetByte >> bit) & 1); // Shift and mask to get each bit
+    }
+    Serial.println(); // Move to the next line after printing all bits
+  } else {
+    Serial.println("Error: More bytes received than expected or not all bytes available");
+  }
+}
